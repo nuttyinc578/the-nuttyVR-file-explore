@@ -40,7 +40,6 @@ jobs:
     timeout-minutes: 20
     env:
       NUTTYVR_BUILD_TOOLS: '35.0.0'
-      NUTTYVR_KEYSTORE: ${{ runner.temp }}/nuttyvr-signing/nuttyvr.jks
       NUTTYVR_STORE_PASSWORD: ${{ secrets.NUTTYVR_STORE_PASSWORD }}
       NUTTYVR_APK_NAME: NuttyVR-File-Explorer-nightly.apk
       NUTTYVR_VERSION_NAME: 1.1.0-nightly.${{ github.run_number }}
@@ -48,6 +47,8 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - name: Set temporary signing path
+        run: echo "NUTTYVR_KEYSTORE=$RUNNER_TEMP/nuttyvr-signing/nuttyvr.jks" >> "$GITHUB_ENV"
       - name: Restore private release signer
         env:
           NUTTYVR_KEYSTORE_BASE64: ${{ secrets.NUTTYVR_KEYSTORE_BASE64 }}
@@ -57,6 +58,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - name: Install Android SDK packages
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Test file operations and APK snapshots
