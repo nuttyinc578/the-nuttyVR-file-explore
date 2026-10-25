@@ -1,0 +1,31 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.nuttyvr.explorer'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.nuttyvr.explorer'
+        minSdk 29
+        targetSdk 34
+        versionCode 2
+        versionName '1.1.0'
+    }
+    signingConfigs {
+        release {
+            storeFile file('../signing/nuttyvr.jks')
+            storePassword System.getenv('NUTTYVR_STORE_PASSWORD')
+            keyAlias 'nuttyvr'
+            keyPassword System.getenv('NUTTYVR_STORE_PASSWORD')
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    lint { abortOnError true; checkReleaseBuilds true }
+}

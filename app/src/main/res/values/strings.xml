@@ -1,0 +1,9 @@
+<resources>
+    <string name="access_empty_title">This folder needs access.</string>
+    <string name="search_empty_title">No matching files.</string>
+    <string name="search_empty_note">Try another name. Search looks inside this folder.</string>
+    <string name="folder_empty_title">A little room to grow.</string>
+    <string name="folder_empty_note">Create a folder or paste files here to get started.</string>
+    <string name="items_summary">Items: %1$d  ·  Folders: %2$d  ·  Files: %3$d%4$s  ·  %5$s</string>
+    <string name="stopping">Stopping after the current step…</string>
+</resources>

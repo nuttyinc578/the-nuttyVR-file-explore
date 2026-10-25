@@ -1,0 +1,8 @@
+{
+  "apkSha256": "2f01914856d1b0a9aec6cfd275d7b5d2c1dfe294698edc134222e5724eeb95d3",
+  "sourceSha256": "c9ab280c612e10d722dc006ce2bb5ddb9fe800bf15268f952c6013cb23463ce9",
+  "signerSha256": "fc77cd97c2bcd052c8dc59e790b1ab11b094d783ca5584f990d355737e879cc0",
+  "versionName": "1.1.0-nightly.local",
+  "versionCode": 2,
+  "builtBy": "Local Android SDK build, 37 host tests passed"
+}
