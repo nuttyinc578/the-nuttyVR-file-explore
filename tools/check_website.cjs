@@ -43,6 +43,7 @@ const server = http.createServer(async (request, response) => {
         assert.equal(await page.locator("[data-demo-grid] .demo-file").count(), 6);
         await page.screenshot({ path: path.join(output, `${viewport.name}.png`), fullPage: true });
         const overflow = await page.evaluate(() => ({ viewport: innerWidth, width: document.documentElement.scrollWidth }));
+        if (overflow.width > overflow.viewport + 1) console.log("Overflow elements:", await page.evaluate(() => [...document.querySelectorAll("body *")].map(element => ({ tag: element.tagName, class: String(element.className?.baseVal ?? element.className), right: Math.round(element.getBoundingClientRect().right), width: Math.round(element.getBoundingClientRect().width) })).filter(element => element.right > innerWidth + 1).slice(0, 30)));
         assert.ok(overflow.width <= overflow.viewport + 1, `Horizontal page overflow at ${viewport.name}: ${JSON.stringify(overflow)}`);
         assert.equal(await page.locator("h1").count(), 1);
         const download = page.getByRole("link", { name: "Download nightly APK", exact: true });
