@@ -130,7 +130,7 @@ Alternatively, with Gradle 8.9 installed, the Android SDK configured, and the si
 gradle :app:assembleRelease :app:lintRelease
 ```
 
-This environment blocks the local sockets required by the Gradle daemon. The distributed APK was therefore built with `./build.sh`. `python3 tools/lint.py` runs the cached Android Lint CLI against the same sources after an SDK build.
+The distributed APK was built and signed with `./build.sh`. A separate clean Gradle Java/resource compile also passed, including downloading the pinned archive libraries. `python3 tools/lint.py` runs the cached Android Lint CLI against the same sources after an SDK build.
 
 ## Validation
 

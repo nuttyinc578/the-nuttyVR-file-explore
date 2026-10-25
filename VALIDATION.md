@@ -6,6 +6,7 @@ Performed in the build workspace on 2026-10-25.
 
 - Host suites: **71 passed** (22 file-operation tests, 15 APK snapshot tests and 34 archive tests).
 - Android Java/resource compilation and D8 conversion: **passed**.
+- Clean Gradle Java/resource compilation: **passed**, starting in a temporary checkout without archive JARs. The dependency task downloads and verifies the pinned libraries before compilation.
 - Android Lint: **0 errors**. Two advisory warnings remain: `ScopedStorage` for the file manager's broad shared-storage permission, and `OldTargetApi` for the intentional API 34 target used for Quest compatibility. The app also offers Android's folder picker.
 - APK alignment: **passed**.
 - APK cryptographic signature verification: **passed**, v2 and v3 signatures.
@@ -17,7 +18,7 @@ Performed in the build workspace on 2026-10-25.
 - Nightly publication guard checked with five mocked GitHub CLI scenarios: initial creation, forward update, same-source update, stale source and diverged source. Stale/diverged source scenarios issue no publication commands.
 - No internet permission and no CPU-specific native libraries.
 
-The Gradle daemon cannot open its local server socket in this environment. The delivered release was assembled with the Android SDK tools through `build.sh`; Android Lint was run separately through `tools/lint.py`.
+The delivered release was assembled and signed with the Android SDK tools through `build.sh`; Android Lint was run separately through `tools/lint.py`. A separate clean Gradle compile verified the Android Studio build configuration without using the private signing key.
 
 ## Not yet verified on a headset
 

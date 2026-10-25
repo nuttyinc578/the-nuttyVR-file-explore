@@ -34,5 +34,7 @@ tasks.register('fetchArchiveDependencies', Exec) {
     workingDir rootProject.projectDir
     commandLine 'python3', 'tools/fetch_dependencies.py'
 }
-preBuild.dependsOn fetchArchiveDependencies
-dependencies { implementation fileTree(dir: 'libs', include: ['*.jar']) }
+def archiveLibraryFiles = new groovy.json.JsonSlurper().parse(file('libs/dependencies.json')).collect { file("libs/${it.file}") }
+def archiveLibraries = files(archiveLibraryFiles).builtBy(tasks.named('fetchArchiveDependencies'))
+preBuild.dependsOn tasks.named('fetchArchiveDependencies')
+dependencies { implementation archiveLibraries }
