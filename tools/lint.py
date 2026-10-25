@@ -20,7 +20,7 @@ sdk = Path(os.environ.get('ANDROID_HOME', str(Path.home() / 'Android/Sdk')))
 command = [str(java), '-Xmx768m', '-cp', os.pathsep.join(map(str, jars)), 'com.android.tools.lint.Main',
     '--offline', '--exitcode', '--sdk-home', str(sdk), '--compile-sdk-version', '35', '--java-language-level', '1.8',
     '--sources', str(root / 'app/src/main/java'), '--resources', str(root / 'app/src/main/res'),
-    '--classpath', str(root / 'build/sdk/classes'), '--xml', str(root / 'build/lint-results.xml'),
+    '--classpath', os.pathsep.join(map(str, [root / 'build/sdk/classes'] + sorted((root / 'app/libs').glob('*.jar')))), '--xml', str(root / 'build/lint-results.xml'),
     '--text', str(root / 'build/lint-results.txt'), str(project)]
 result = subprocess.run(command)
 print((root / 'build/lint-results.txt').read_text())

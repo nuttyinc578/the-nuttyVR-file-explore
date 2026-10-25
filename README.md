@@ -4,11 +4,11 @@
 
 [Download nightly APK](https://github.com/nuttyinc578/the-nuttyVR-file-explore/releases/download/nightly/NuttyVR-File-Explorer-nightly.apk) · [Nightly release](https://github.com/nuttyinc578/the-nuttyVR-file-explore/releases/tag/nightly) · [Build status](https://github.com/nuttyinc578/the-nuttyVR-file-explore/actions/workflows/nightly.yml)
 
-The first nightly download is published from a verified local build by **Publish initial nightly**. Once the signing secrets are configured, **Nightly APK** builds changes to `main` and runs daily at 08:23 UTC. See [nightly setup](docs/NIGHTLY.md) for setup and manual build instructions.
+The nightly download can be published from a verified local build by **Publish verified APK**, without exposing its private signing key. Once the signing secrets are configured, **Nightly APK** builds changes to `main` and runs daily at 08:23 UTC. See [nightly setup](docs/NIGHTLY.md) for setup and manual build instructions.
 
 A native Android file manager designed for a floating, resizable window inside a VR headset. Dark navy surfaces, mint controls, readable file cards, pointer hover/focus feedback, and large action targets.
 
-**APK:** `dist/NuttyVR-File-Explorer-1.1.0.apk`  
+**APK:** `dist/NuttyVR-File-Explorer-1.2.0.apk`  
 **Package:** `com.nuttyvr.explorer`  
 **Minimum Android:** 10 / API 29 · **Target:** Android 14 / API 34
 
@@ -33,6 +33,8 @@ The APK contains Java/Dex code with no native CPU-specific libraries. No account
 - Images preview at bounded resolution; UTF-8 text previews are limited to 128 KB.
 - Tap APK files to inspect their package/version, install or update through Android, and open the installed app.
 - Request the Android permission to install unknown apps when needed; installation remains user-confirmed.
+- Tap ZIP, TAR, TAR.GZ, TGZ and single-volume RAR4/RAR5 archives to extract into a new folder, with progress and cancellation.
+- Archive paths, links, duplicate names, checksums and extraction limits are checked; existing files are preserved.
 - Open other files using an installed app through temporary read-only URI grants.
 - Hidden-file toggle, remembered view/sort settings, and device free-space display.
 - Full shared-storage access, or one remembered folder through Android's Storage Access Framework. USB folders are available when exposed by the device's document picker.
@@ -43,7 +45,7 @@ Enable developer mode and USB debugging for your headset, connect it to your com
 
 ```sh
 adb devices
-adb install -r NuttyVR-File-Explorer-1.1.0.apk
+adb install -r NuttyVR-File-Explorer-1.2.0.apk
 adb shell am start -n com.nuttyvr.explorer/.MainActivity
 ```
 
@@ -67,7 +69,7 @@ Android's restrictions on private app storage still apply. This app does not byp
 
 ## Install and launch APK files
 
-1. Install this **1.1.0** update over NuttyVR 1.0.0. It uses the same package ID and signing key, so your settings are retained.
+1. Install this **1.2.0** update over an earlier NuttyVR version. It uses the same package ID and signing key, so your settings are retained.
 2. Browse to a standalone `.apk` file and tap it, or choose **Install / open app** from its menu.
 3. NuttyVR prepares a private snapshot and displays the app name, package, version and size. APKs in a chosen folder or USB provider work through the same screen.
 4. Choose **Install APK** or **Install / update APK**. If prompted, allow NuttyVR to install unknown apps and return to NuttyVR. Confirm the installation in Android’s installer.
@@ -76,6 +78,18 @@ Android's restrictions on private app storage still apply. This app does not byp
 If you cancel, NuttyVR reports that the installation did not complete. If the headset hides its unknown-app settings, NuttyVR tries the system installer’s own permission flow. If no system installer is exposed, installation must be done from a computer. Service-only packages have no activity to open. Split bundles such as `.apks` and `.xapk` are not supported.
 
 Installation needs temporary device storage for a private APK snapshot. A read-only, file-specific URI grant lets the system installer read it; the original file remains untouched. Snapshots are removed when you leave the APK screen after the installer has returned. A process termination can leave cache files for Android to reclaim.
+
+## Extract ZIP, TAR and RAR archives
+
+1. Tap a `.zip`, `.tar`, `.tar.gz`, `.tgz` or `.rar` file. You can also choose **Extract archive** from its menu, or select it and choose **Extract** in the toolbar.
+2. Choose **Extract**. NuttyVR creates a new folder beside the archive. If that folder name already exists, a numbered name is used. The archive and existing files are kept.
+3. Keep NuttyVR open until extraction finishes. The progress dialog shows the current file and bytes processed; **Cancel** stops the operation and attempts to remove partial output.
+
+Supports ordinary ZIP, TAR/PAX/GNU long names, gzip-compressed TAR, and single-volume RAR4/RAR5, including solid archives. Password protected ZIP/RAR, multipart RAR, archive links, special files and sparse TAR files are not supported. Unsupported or damaged entries stop extraction instead of being silently skipped.
+
+Extraction limits: 8 GiB of file data, 100,000 entries, 64 path components and a 64 MiB RAR dictionary. Archives from a chosen folder/USB provider need a private snapshot, limited to 2 GiB. Shared-storage archives are read directly. Provider rename/write support and sufficient free space are required. If a provider refuses cleanup, the error names the partial `.nuttyvr-extract-…` folder. A forced process termination can leave a hidden partial folder or temporary cache file.
+
+Archive decoding uses [Apache Commons Compress](https://commons.apache.org/proper/commons-compress/) and [Junrar](https://github.com/junrar/junrar/tree/v8.0.0). See [third-party notices](THIRD_PARTY.md); license texts are also included in the APK.
 
 ## Use
 
@@ -88,7 +102,7 @@ Keep the app open during transfers. A cancelled or failed batch may have already
 
 ## Build
 
-The source includes a standard Android Gradle Plugin 8.7.3 project for Android Studio and an SDK-only builder. No app dependencies need downloading.
+The source includes a standard Android Gradle Plugin 8.7.3 project for Android Studio and an SDK-only builder. Archive libraries are downloaded from Maven Central on the first build and checked against pinned SHA-256 hashes; subsequent builds work offline.
 
 Requirements: Python 3, JDK 17 or newer, Android SDK Platform 35 and Build Tools 34.0.0 or newer. Set `JAVA_HOME` and `ANDROID_HOME` for your machine. JDK 22 requires a recent D8; the SDK builder uses the cached AGP 8.7.3 D8 when available, or accepts `NUTTYVR_D8_JAR`.
 
@@ -120,7 +134,7 @@ This environment blocks the local sockets required by the Gradle daemon. The dis
 
 ## Validation
 
-`./test.sh` runs 22 file-operation tests and 15 APK snapshot tests covering byte preservation, name collisions, nested/hidden files, cancellation, staging cleanup, source size changes, move behavior, rename conflicts, path traversal, canonical boundaries, symbolic links and recursive deletion. The APK tests cover exact snapshot bytes, source changes, storage limits, cancellation, failed reads/closes, and the private URI path boundary. Android document providers, system installation, app launching and the UI require device testing.
+`./test.sh` runs 71 tests: 22 file-operation tests, 15 APK snapshot tests, and 34 archive extraction tests. Archive tests decode real RAR4/RAR5 and solid RAR samples, ZIP and TAR/PAX/GZIP, and check exact file bytes, corrupt checksums, truncated files, unsafe paths, links, collisions, resource limits and cancellation. Android document providers, system installation, app launching and the UI require device testing.
 
 See `VALIDATION.md` for the checks performed on this release and a short device acceptance checklist.
 

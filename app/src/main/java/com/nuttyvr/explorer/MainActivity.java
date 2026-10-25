@@ -173,7 +173,7 @@ public final class MainActivity extends Activity {
                 ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(100);bar.setProgress((int)(100*(total-free)/Math.max(1,total)));bar.setProgressTintList(android.content.res.ColorStateList.valueOf(MINT));target.addView(bar,new LinearLayout.LayoutParams(-1,dp(4)));
                 TextView totalLabel=text(Formatter.formatFileSize(this,total)+" device storage",10,MUTED);pad(totalLabel,10,8,0,4);target.addView(totalLabel);
             }catch(IllegalArgumentException ignored){}
-            TextView v=text("NUTTYVR  /  1.1",10,MUTED);pad(v,10,16,0,0);v.setLetterSpacing(.1f);target.addView(v);
+            TextView v=text("NUTTYVR  /  1.2",10,MUTED);pad(v,10,16,0,0);v.setLetterSpacing(.1f);target.addView(v);
         }
     }
     private void nav(LinearLayout parent,String icon,String label,Runnable action,Dialog dialog){
@@ -237,7 +237,11 @@ public final class MainActivity extends Activity {
             addAction(toolbar,button("close",selected.size()+" selected",false,()->{selected.clear();adapter.notifyDataSetChanged();renderToolbar();}));
             addAction(toolbar,button("copy","Copy",false,()->setClipboard(false)));
             addAction(toolbar,button("cut","Move",false,()->setClipboard(true)));
-            if(selected.size()==1)addAction(toolbar,button(null,"Rename",false,()->rename(selected.values().iterator().next())));
+            if(selected.size()==1){
+                Storage.Item item=selected.values().iterator().next();
+                if(!item.directory&&ArchiveFiles.supported(item.name))addAction(toolbar,button("zip","Extract",false,()->extract(item)));
+                addAction(toolbar,button(null,"Rename",false,()->rename(item)));
+            }
             addAction(toolbar,button("trash","Delete",false,()->delete(new ArrayList<>(selected.values()))));
             addAction(toolbar,button("check","Select all",false,this::selectAll));
         }
@@ -254,7 +258,7 @@ public final class MainActivity extends Activity {
     private void activate(Storage.Item item){if(busy)return;if(!selected.isEmpty())toggle(item);else if(item.directory)enter(item);else preview(item);}
     private void itemMenu(Storage.Item item){
         if(busy)return;
-        new AlertDialog.Builder(this).setTitle(item.name).setItems(new String[]{item.directory?"Open folder":ApkFiles.isApk(item.name,item.mime)?"Install / open app":"Open / preview","Select","Copy","Move","Rename","Details","Delete"},(d,n)->{
+        new AlertDialog.Builder(this).setTitle(item.name).setItems(new String[]{item.directory?"Open folder":ApkFiles.isApk(item.name,item.mime)?"Install / open app":ArchiveFiles.supported(item.name)?"Extract archive":"Open / preview","Select","Copy","Move","Rename","Details","Delete"},(d,n)->{
             if(n==0){if(item.directory)enter(item);else preview(item);}else if(n==1)toggle(item);else if(n==2||n==3){selected.clear();selected.put(item.key(),item);setClipboard(n==3);}else if(n==4)rename(item);else if(n==5)details(item);else delete(Collections.singletonList(item));
         }).setNegativeButton("Close",null).show();
     }
@@ -312,9 +316,20 @@ public final class MainActivity extends Activity {
     private boolean isText(Storage.Item item){String n=item.name.toLowerCase(Locale.ROOT);return item.mime.startsWith("text/")||n.endsWith(".json")||n.endsWith(".md")||n.endsWith(".log")||n.endsWith(".xml")||n.endsWith(".csv");}
     private void preview(Storage.Item item){
         if(ApkFiles.isApk(item.name,item.mime)){startActivity(ApkActivity.forItem(this,item));return;}
+        if(ArchiveFiles.supported(item.name)){extract(item);return;}
         if(item.mime.startsWith("image/")){previewImage(item);return;}
         if(isText(item)){previewText(item);return;}
         openExternal(item);
+    }
+    private void extract(Storage.Item item){
+        if(busy)return;
+        final Storage.Item parent=current();
+        show(new AlertDialog.Builder(this).setTitle("Extract "+item.name+"?")
+            .setMessage("Create a new folder here with the archive’s contents. Existing files and the original archive are kept.\n\nSupports ZIP, TAR, TAR.GZ and single-file RAR4/RAR5. Password protected archives are not supported yet.")
+            .setPositiveButton("Extract",(d,n)->runTask("Extracting archive",(cancel,progress)->{
+                Storage.Item folder=storage.extract(item,parent,getCacheDir(),cancel,progress);
+                return "Extracted to “"+folder.name+"”.";
+            },null)).setNeutralButton("Open with…",(d,n)->openExternal(item)).setNegativeButton("Cancel",null).create());
     }
     private void previewText(Storage.Item item){
         toast("Opening preview…");listing.execute(()->{
@@ -372,7 +387,7 @@ public final class MainActivity extends Activity {
     @Override protected void onResume(){super.onResume();boolean available=hasStorage();if(storage!=null&&available!=hadStorage){hadStorage=available;if(available&&!busy)goRoot(new Storage.Item(Environment.getExternalStorageDirectory()),"Headset storage");else if(!available&&!busy)goRoot(new Storage.Item(workspace()),"Workspace");}else if(accessBanner!=null)renderAccess();}
     @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(request==44){hadStorage=hasStorage();if(hadStorage)goRoot(new Storage.Item(Environment.getExternalStorageDirectory()),"Headset storage");else accessOptions();}}
     private void help(){
-        show(new AlertDialog.Builder(this).setTitle("A little space for everything.").setMessage("NuttyVR File Explorer 1.1\n\nBuilt for a resizable window in your headset. Point and click with the headset’s system pointer, controller or hand input.\n\nTap a folder to open it. Use the selection circle, or hold an item, to select. Copy or Move, open a destination, then Paste here. Existing files are kept with numbered names.\n\nSearch filters the current folder. Images and text have built-in previews. Tap an APK to install it through Android, or open its installed app. Other files open in installed apps. Choose folder can connect a USB drive if Android exposes it.\n\nYour files stay on your device. No account, ads or network permission. Android’s private-folder restrictions still apply.")
+        show(new AlertDialog.Builder(this).setTitle("A little space for everything.").setMessage("NuttyVR File Explorer 1.2\n\nBuilt for a resizable window in your headset. Point and click with the headset’s system pointer, controller or hand input.\n\nTap a folder to open it. Use the selection circle, or hold an item, to select. Copy or Move, open a destination, then Paste here. Existing files are kept with numbered names.\n\nSearch filters the current folder. Images and text have built-in previews. Tap an APK to install it through Android, or open its installed app. Tap a ZIP, TAR or RAR to extract into a new folder here. Other files open in installed apps. Choose folder can connect a USB drive if Android exposes it.\n\nYour files stay on your device. No account, ads or network permission. Android’s private-folder restrictions still apply.")
             .setPositiveButton("Got it",null).setNeutralButton("Storage access",(d,n)->accessOptions()).create());
     }
     private void show(AlertDialog dialog){if(destroyed)return;dialog.show();if(dialog.getWindow()!=null)dialog.getWindow().setBackgroundDrawable(shape(PANEL,22,BORDER));}
@@ -383,7 +398,7 @@ public final class MainActivity extends Activity {
     @Override protected void onSaveInstanceState(Bundle state){super.onSaveInstanceState(state);if(current().file!=null)state.putString("path",current().file.getAbsolutePath());}
     @Override protected void onDestroy(){destroyed=true;if(activeCancel!=null)activeCancel.cancelled=true;if(activeDialog!=null)activeDialog.dismiss();handler.removeCallbacksAndMessages(null);listing.shutdownNow();operations.shutdown();super.onDestroy();}
 
-    private String kind(Storage.Item item){if(item.directory)return "folder";if(item.mime.startsWith("image/"))return "image";if(item.mime.startsWith("video/"))return "video";if(item.mime.startsWith("audio/"))return "music";String n=item.name.toLowerCase(Locale.ROOT);if(n.endsWith(".apk"))return "apk";if(n.endsWith(".zip")||n.endsWith(".rar")||n.endsWith(".7z")||n.endsWith(".gz"))return "zip";return "file";}
+    private String kind(Storage.Item item){if(item.directory)return "folder";if(item.mime.startsWith("image/"))return "image";if(item.mime.startsWith("video/"))return "video";if(item.mime.startsWith("audio/"))return "music";String n=item.name.toLowerCase(Locale.ROOT);if(n.endsWith(".apk"))return "apk";if(ArchiveFiles.supported(n)||n.endsWith(".7z")||n.endsWith(".gz"))return "zip";return "file";}
     private int itemColor(Storage.Item item){switch(kind(item)){case "folder":return 0xffe8c58b;case "image":return 0xffb7a6f2;case "video":return 0xff9cbff7;case "music":return 0xffefa2bf;case "apk":return MINT;case "zip":return 0xffe1b281;default:return 0xffa9bdcf;}}
     private final class FileAdapter extends BaseAdapter {
         @Override public int getCount(){return visible.size();}

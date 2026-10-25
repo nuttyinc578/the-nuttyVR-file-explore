@@ -42,7 +42,7 @@ jobs:
       NUTTYVR_BUILD_TOOLS: '35.0.0'
       NUTTYVR_STORE_PASSWORD: ${{ secrets.NUTTYVR_STORE_PASSWORD }}
       NUTTYVR_APK_NAME: NuttyVR-File-Explorer-nightly.apk
-      NUTTYVR_VERSION_NAME: 1.1.0-nightly.${{ github.run_number }}
+      NUTTYVR_VERSION_NAME: 1.2.0-nightly.${{ github.run_number }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -63,7 +63,7 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - name: Install Android SDK packages
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
-      - name: Test file operations and APK snapshots
+      - name: Test file operations, APK snapshots and archives
         run: bash test.sh
       - name: Build and verify signed nightly
         run: bash build.sh

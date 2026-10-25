@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Publish a verified artifact to the one rolling 'nightly' prerelease."""
+"""Publish a verified artifact to the rolling nightly release without moving it backwards."""
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -20,27 +21,32 @@ expected = f'{hashlib.sha256(apk.read_bytes()).hexdigest()}  {apk.name}\n'
 if checksum.read_text() != expected:
     raise SystemExit('The APK checksum does not match. Nothing has been published.')
 notes = root / 'dist/nightly-notes.md'
-initial = os.environ.get('NUTTYVR_INITIAL_ONLY') == '1'
-description = 'Initial nightly APK built locally and verified against this source in GitHub Actions.' if initial else 'Latest successful automated build of NuttyVR File Explorer.'
+snapshot = os.environ.get('NUTTYVR_VERIFIED_SNAPSHOT') == '1'
+description = ('Locally signed NuttyVR APK, with source fingerprint, signing certificate and archive tests verified in GitHub Actions.'
+               if snapshot else 'Latest successful automated build of NuttyVR File Explorer.')
 notes.write_text(f'''{description}
 
 Source commit: `{commit}`  
 [Build and test results]({run_url})
 
-Download **NuttyVR-File-Explorer-nightly.apk**, install it on your headset, and grant storage access if prompted.
+Download **NuttyVR-File-Explorer-nightly.apk** and install it over your existing NuttyVR APK. The package and release signer are unchanged.
 
-Includes APK installation and app launching. This is a development build; headset testing is still required.
+Includes APK installation and app launching, plus **ZIP, TAR, TAR.GZ and RAR4/RAR5 extraction**. Tap an archive and choose **Extract** to create a new folder beside it. Extraction supports progress and cancellation and keeps existing files.
+
+Password protected archives, multipart RAR, archive links and sparse TAR files are not supported. Extraction is limited to 8 GiB of file data, 100,000 entries and a 64 MiB RAR dictionary; chosen-folder archive snapshots are limited to 2 GiB.
+
+This is a development build. Physical headset and document-provider testing is still required.
 ''')
 
 def gh(*args, **kwargs):
     return subprocess.run(['gh', *args], check=True, text=True, **kwargs)
 
-# A full release listing distinguishes an absent nightly from an authentication or API failure.
+# A failed API request must not be mistaken for an absent release.
 result = gh('api', f'repos/{repository}/releases', '--paginate', '--jq', '.[] | select(.tag_name == "nightly") | .id', capture_output=True)
 if result.stdout.strip():
-    if initial:
-        print('The nightly release already exists; keeping its current APK.')
-        raise SystemExit(0)
+    comparison = json.loads(gh('api', f'repos/{repository}/compare/nightly...{commit}', capture_output=True).stdout)
+    if comparison['status'] not in ('ahead', 'identical'):
+        raise SystemExit('Keeping the current nightly: this workflow would move its source backwards or onto another branch.')
     gh('release', 'upload', 'nightly', str(apk), str(checksum), '--clobber', '--repo', repository)
     gh('api', '--method', 'PATCH', f'repos/{repository}/git/refs/tags/nightly', '-f', f'sha={commit}', '-F', 'force=true')
     gh('release', 'edit', 'nightly', '--title', 'Nightly APK', '--notes-file', str(notes), '--prerelease', '--latest=false', '--repo', repository)

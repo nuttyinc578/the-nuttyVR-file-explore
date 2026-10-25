@@ -1,4 +1,4 @@
-name: Publish initial nightly
+name: Publish verified APK
 
 "on":
   push:
@@ -7,6 +7,7 @@ name: Publish initial nightly
       - 'prebuilt/nightly/**'
       - '.github/workflows/initial-nightly.yml'
       - 'tools/prepare_prebuilt_nightly.py'
+      - 'tools/publish_nightly.py'
   workflow_dispatch:
 
 permissions:
@@ -41,11 +42,11 @@ jobs:
         env:
           NUTTYVR_BUILD_TOOLS: '35.0.0'
         run: python3 tools/prepare_prebuilt_nightly.py
-      - name: Publish initial nightly download
+      - name: Publish verified APK download
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           NUTTYVR_COMMIT: ${{ github.sha }}
           NUTTYVR_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          NUTTYVR_INITIAL_ONLY: '1'
+          NUTTYVR_VERIFIED_SNAPSHOT: '1'
         run: python3 tools/publish_nightly.py

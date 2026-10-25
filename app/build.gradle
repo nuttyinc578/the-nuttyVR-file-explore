@@ -6,8 +6,8 @@ android {
         applicationId 'com.nuttyvr.explorer'
         minSdk 29
         targetSdk 34
-        versionCode 2
-        versionName '1.1.0'
+        versionCode 3
+        versionName '1.2.0'
     }
     signingConfigs {
         release {
@@ -29,3 +29,10 @@ android {
     }
     lint { abortOnError true; checkReleaseBuilds true }
 }
+
+tasks.register('fetchArchiveDependencies', Exec) {
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'tools/fetch_dependencies.py'
+}
+preBuild.dependsOn fetchArchiveDependencies
+dependencies { implementation fileTree(dir: 'libs', include: ['*.jar']) }

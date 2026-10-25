@@ -115,6 +115,71 @@ final class Storage {
         return stream;
     }
 
+    Item extract(Item source, Item parent, File cache, LocalFiles.Cancellation cancel, LocalFiles.Progress progress) throws IOException {
+        File snapshot = null;
+        Item stage = null;
+        try {
+            File archive = source.file;
+            if (archive == null) {
+                // Random access is required by ZIP and RAR. Provider files get a bounded private snapshot.
+                final long limit = 2L << 30;
+                if (source.size > limit) throw new IOException("Archives from a chosen folder are limited to 2 GB. Use shared storage for larger archives.");
+                snapshot = File.createTempFile("nuttyvr-archive-", ".part", cache);
+                long copied = 0;
+                try (InputStream in = input(source); OutputStream out = new FileOutputStream(snapshot)) {
+                    byte[] buffer = new byte[65536]; int n;
+                    while ((n = in.read(buffer)) != -1) {
+                        cancel.check();
+                        if (n > limit - copied) throw new IOException("Archives from a chosen folder are limited to 2 GB.");
+                        out.write(buffer, 0, n); copied += n; progress.update(n, "Preparing " + source.name);
+                    }
+                }
+                if (source.size >= 0 && copied != source.size) throw new IOException("The archive changed while being prepared. Try again.");
+                archive = snapshot;
+            }
+            cancel.check();
+            stage = mkdir(parent, ".nuttyvr-extract-" + UUID.randomUUID());
+            final Item outputRoot = stage;
+            ArchiveFiles.Target target;
+            if (stage.file != null) target = ArchiveFiles.localTarget(stage.file);
+            else target = new ArchiveFiles.Target() {
+                private final Map<String, Item> folders = new HashMap<>();
+                { folders.put("", outputRoot); }
+                private Item parent(String path) throws IOException {
+                    int slash = path.lastIndexOf('/');
+                    Item folder = folders.get(slash < 0 ? "" : path.substring(0, slash));
+                    if (folder == null) throw new IOException("The archive folder is unavailable.");
+                    return folder;
+                }
+                private String name(String path) { return path.substring(path.lastIndexOf('/') + 1); }
+                public void directory(String path) throws IOException { folders.put(path, mkdir(parent(path), name(path))); }
+                public OutputStream file(String path) throws IOException { return output(create(parent(path), name(path), mime(name(path)))); }
+            };
+            ArchiveFiles.extract(archive, source.name, target, cancel, progress);
+            cancel.check();
+            Set<String> names = new HashSet<>();
+            for (Item sibling : list(parent)) names.add(sibling.name);
+            String stem = ArchiveFiles.folderName(source.name), name = stem;
+            for (int n = 1; names.contains(name); n++) {
+                if (n > 10000) throw new IOException("Too many folders with this name.");
+                name = stem + " (" + n + ")";
+            }
+            Item result = rename(parent, stage, name);
+            stage = null;
+            return result;
+        } catch (IOException | RuntimeException failure) {
+            if (stage != null) {
+                try { delete(stage, new LocalFiles.Cancellation()); }
+                catch (IOException cleanup) {
+                    throw new IOException("Extraction stopped. A partial folder remains: " + stage.name + ". " + failure.getMessage(), failure);
+                }
+            }
+            throw failure;
+        } finally {
+            if (snapshot != null) snapshot.delete();
+        }
+    }
+
     Item transfer(Item source, Item dest, boolean move, LocalFiles.Cancellation cancel, LocalFiles.Progress progress) throws IOException {
         if (source.file != null && dest.file != null) {
             return new Item(move ? LocalFiles.move(source.file, dest.file, cancel, progress)

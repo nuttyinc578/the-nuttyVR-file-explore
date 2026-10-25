@@ -5,3 +5,5 @@ signing/*.jks
 signing/*.properties
 signing/password
 dist/
+app/libs/*.jar
+**/__pycache__/

@@ -1,0 +1,57 @@
+[
+  {
+    "file": "rar4.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/rar4.rar",
+    "sha256": "91e21f4126181790429f5e5ecdefedae6d6883ed6b4b396fc94d4ed6b32c065a"
+  },
+  {
+    "file": "rar5.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/rar5.rar",
+    "sha256": "aaf1a7d974f302f181720280151053f15ef1119b13d2f7bf9fddf2163bbf1701"
+  },
+  {
+    "file": "rar4-solid.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/solid/rar4-solid.rar",
+    "sha256": "b158d4b0e3506f04fcaff18db9b369b573fd54f313062c7b8c622cb33b9c5da4"
+  },
+  {
+    "file": "rar5-solid.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/solid/rar5-solid.rar",
+    "sha256": "d004997e805cb7bb47bd73904aae113f81ee1d82d80bed9372c5dd64d1684754"
+  },
+  {
+    "file": "unicode.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/unicode.rar",
+    "sha256": "b35d9c57cab65a2f15827cb072aed971a99902d332f8c0ccf1ebcac69ab951e2"
+  },
+  {
+    "file": "rar4-password-junrar.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/password/rar4-password-junrar.rar",
+    "sha256": "6eaba6677e056caee5548669eed13ac932e6a8ac150d6c5c69ae95d23f002588"
+  },
+  {
+    "file": "rar5-encrypted-junrar.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/password/rar5-encrypted-junrar.rar",
+    "sha256": "eedcde5498c9f7b7431b524b44f481184b08e64a7274a2f29d8b9d11850790b9"
+  },
+  {
+    "file": "rar5-links.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/links/rar5-links.rar",
+    "sha256": "c61ac78cf96221d26159acf531488a7e56515beda561297b573e36d1fb732b92"
+  },
+  {
+    "file": "m0-plain-128k.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/rar5unpack/m0-plain-128k.rar",
+    "sha256": "6b415c36973e6b6d885001e4d0b3f68b4e09dbd737c7e200b78aaa1ec940807c"
+  },
+  {
+    "file": "m3-1gb-claim.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/rar5unpack/m3-1gb-claim.rar",
+    "sha256": "f1d6dcea597ba55c646eb7f3b2a61883cd5d74f6de0493bbec04cf282dd07b36"
+  },
+  {
+    "file": "m3-plain-128k.rar",
+    "url": "https://raw.githubusercontent.com/junrar/junrar/v8.0.0/src/test/resources/com/github/junrar/rar5unpack/m3-plain-128k.rar",
+    "sha256": "4ee20affff9cac75e651141457cfb4ea66a0feb73bb90891f8b7a29caa389269"
+  }
+]

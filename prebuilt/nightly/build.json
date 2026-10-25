@@ -1,8 +1,8 @@
 {
-  "apkSha256": "2f01914856d1b0a9aec6cfd275d7b5d2c1dfe294698edc134222e5724eeb95d3",
-  "sourceSha256": "c9ab280c612e10d722dc006ce2bb5ddb9fe800bf15268f952c6013cb23463ce9",
+  "apkSha256": "ef2f4ff29016ee9d6d666851924d225da74ee4e17dc4df18784061e2a0f1f954",
+  "sourceSha256": "54cfb022c0854b0d7e2e6c0488841695e83175b2d431973cebbef52e22e09dec",
   "signerSha256": "fc77cd97c2bcd052c8dc59e790b1ab11b094d783ca5584f990d355737e879cc0",
-  "versionName": "1.1.0-nightly.local",
-  "versionCode": 2,
-  "builtBy": "Local Android SDK build, 37 host tests passed"
+  "versionName": "1.2.0",
+  "versionCode": 3,
+  "builtBy": "Local Android SDK build, 71 host tests passed (34 archive tests)"
 }

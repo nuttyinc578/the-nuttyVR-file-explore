@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Android SDK build without a Gradle daemon or external dependencies."""
+"""Android SDK build without a Gradle daemon; archive libraries are pinned."""
 import hashlib
+from fetch_dependencies import ensure
 import os
 from pathlib import Path
 import shutil
@@ -16,8 +17,8 @@ BT = SDK / 'build-tools' / os.environ.get('NUTTYVR_BUILD_TOOLS', '34.0.0')
 PLATFORM = SDK / 'platforms/android-35/android.jar'
 OUT = ROOT / 'build/sdk'
 DIST = ROOT / 'dist'
-VERSION_NAME = os.environ.get('NUTTYVR_VERSION_NAME', '1.1.0')
-VERSION_CODE = int(os.environ.get('NUTTYVR_VERSION_CODE', '2'))
+VERSION_NAME = os.environ.get('NUTTYVR_VERSION_NAME', '1.2.0')
+VERSION_CODE = int(os.environ.get('NUTTYVR_VERSION_CODE', '3'))
 APK_NAME = os.environ.get('NUTTYVR_APK_NAME', f'NuttyVR-File-Explorer-{VERSION_NAME}.apk')
 KEYSTORE = Path(os.environ.get('NUTTYVR_KEYSTORE', str(ROOT / 'signing/nuttyvr.jks')))
 KEY_ALIAS = os.environ.get('NUTTYVR_KEY_ALIAS', 'nuttyvr')
@@ -40,6 +41,8 @@ if OUT.exists():
 for folder in [OUT / 'generated', OUT / 'classes', OUT / 'dex', DIST]:
     folder.mkdir(parents=True, exist_ok=True)
 
+libraries = ensure()
+
 print('Compiling Android resources…', flush=True)
 run(BT / 'aapt2', 'compile', '--dir', ROOT / 'app/src/main/res', '-o', OUT / 'resources.zip')
 android = 'http://schemas.android.com/apk/res/android'
@@ -57,13 +60,13 @@ for node in manifest.iter():
 manifest.write(OUT / 'AndroidManifest.xml', encoding='utf-8', xml_declaration=True)
 run(BT / 'aapt2', 'link', '-o', OUT / 'resources.apk', '--manifest', OUT / 'AndroidManifest.xml',
     '-I', PLATFORM, '--java', OUT / 'generated', '--min-sdk-version', '29', '--target-sdk-version', '34',
-    '--version-code', str(VERSION_CODE), '--version-name', VERSION_NAME, OUT / 'resources.zip')
+    '--version-code', str(VERSION_CODE), '--version-name', VERSION_NAME, OUT / 'resources.zip', '-A', ROOT / 'app/src/main/assets')
 
 print('Compiling native Android app…', flush=True)
 sources = sorted((ROOT / 'app/src/main/java').rglob('*.java')) + sorted((OUT / 'generated').rglob('*.java'))
-run(JAVA / 'bin/javac', '-g', '-encoding', 'UTF-8', '--release', '8', '-classpath', PLATFORM, '-d', OUT / 'classes', *sources)
+run(JAVA / 'bin/javac', '-g', '-encoding', 'UTF-8', '--release', '8', '-classpath', os.pathsep.join(map(str, [PLATFORM] + libraries)), '-d', OUT / 'classes', *sources)
 run(JAVA / 'bin/jar', 'cf', OUT / 'classes.jar', '-C', OUT / 'classes', '.')
-d8_args = ['--release', '--min-api', '29', '--lib', PLATFORM, '--output', OUT / 'dex', OUT / 'classes.jar']
+d8_args = ['--release', '--min-api', '29', '--lib', PLATFORM, '--output', OUT / 'dex', OUT / 'classes.jar', *libraries]
 # AGP's D8 handles the class metadata emitted by recent javac versions; Build Tools 34's older D8 does not.
 cached_d8 = sorted((Path.home() / '.gradle/caches/modules-2/files-2.1/com.android.tools.build/builder/8.7.3').glob('*/*.jar'))
 d8_jar = os.environ.get('NUTTYVR_D8_JAR') or (str(cached_d8[0]) if cached_d8 else None)
