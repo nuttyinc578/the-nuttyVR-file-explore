@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nuttyinc578.github.io/the-nuttyVR-file-explore/sitemap.xml
